@@ -64,8 +64,8 @@ def experiment_change_beta(x_arr):
 
 
 def experiment_change_integration_area(x_arr, alpha):
-    p_new = [-500, -100, -100, -10, 0, 100]
-    q_new = [-100, 0, 100, 10, 100, 500]
+    p_new = [-200, -200, -200, -200]
+    q_new = [-100, 0, 100, 200]
     f_x = f(x_arr, beta)
     for p, q in zip(p_new, q_new):
         ksi_arr_new = np.linspace(p, q, m)
@@ -83,7 +83,7 @@ def experiment_change_alpha(x_arr, ksi_arr):
 
 
 def experiment_change_b(ksi_arr, alpha):
-    b_values = [1 / 10000, 0.5, 1, 10, 100]
+    b_values = [1, 10, 100]
     for b_value in b_values:
         x_arr_new = np.linspace(a, b_value, n)
         g_array = calculate_F(f(x_arr_new, beta), x_arr_new, ksi_arr, alpha)
@@ -92,8 +92,8 @@ def experiment_change_b(ksi_arr, alpha):
 
 if __name__ == '__main__':
     m, n = 1000, 1000
-    a, b = 1, 5
-    p, q = 0, 3
+    a, b = -3, 3
+    p, q = -3, 3
     alpha, beta = 1, 1 / 10
 
     x_arr = np.linspace(a, b, n)
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # g_array = calculate_F(f(x_arr, beta), x_arr, ksi_arr, alpha)
     # plot_graphs(ksi_arr, np.abs(g_array), np.angle(g_array), Title.outputA.value, Title.outputF.value, generate_suptitle('[p, q]', f'[{p}, {q}]'))
 
-    # experiment_change_integration_area(x_arr, alpha)
+    experiment_change_integration_area(x_arr, alpha)
 
     # experiment_change_alpha(x_arr, ksi_arr)
 
