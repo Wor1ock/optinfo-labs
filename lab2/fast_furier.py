@@ -42,14 +42,6 @@ def analytical_solution(u: NDArray[np.float64]) -> NDArray[np.float64]:
     return 4 * np.sinc(4 * u)
 
 
-def plot_2d_field(field: NDArray[np.complex128], title: str) -> None:
-    """График двумерного поля"""
-    plt.figure()
-    plt.imshow(np.abs(field), extent=(-5, 5, -5, 5), cmap='jet')
-    plt.colorbar()
-    plt.title(title)
-
-
 def fft_2d_process(field: NDArray[np.float64], M: int, N: int, hx: float) -> NDArray[np.complex128]:
     """Обработка двумерного поля через БПФ"""
     for i in range(N):
@@ -59,6 +51,25 @@ def fft_2d_process(field: NDArray[np.float64], M: int, N: int, hx: float) -> NDA
         col_fft = fft_process(field[i, :], M, N, hx)
         field[i, :] = col_fft
     return field
+
+
+def plot_2d_results(field: NDArray[np.complex128], title: str, extent: List[float] = None) -> None:
+    """Построение двумерных графиков амплитуды и фазы"""
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.title(f'Амплитуда {title}')
+    plt.imshow(np.abs(field), extent=extent if extent else (-5, 5, -5, 5), cmap='jet', aspect='auto')
+    plt.colorbar()
+
+    plt.subplot(1, 2, 2)
+    plt.title(f'Фаза {title}')
+    plt.imshow(np.angle(field), extent=extent if extent else (-5, 5, -5, 5), cmap='jet', aspect='auto')
+    plt.colorbar()
+
+    plt.suptitle(f'Амплитуда и фаза {title}', color='r')
+    plt.tight_layout(rect=(0, 0, 1, 0.96))
+    plt.show()
 
 
 def plot_results(x: np.ndarray, signal: np.ndarray, title: str) -> None:
@@ -116,54 +127,50 @@ def main() -> None:
     x = np.linspace(-a, a - hx / 2, N)
     u = np.linspace(-b, b - hu / 2, N)
 
-    # # Гауссов пучок
-    # gauss = gauss_beam(x)
-    # plot_results(x, gauss, 'гауссова пучка')
-    #
-    # FFT_gauss = fft_process(gauss, M, N, hx)
-    # plot_results(u, FFT_gauss, 'БПФ гауссова пучка')
-    #
-    # G = fourier_integral(x, u, gauss, hx)
-    # plot_results(u, G, 'ПФ гауссова пучка')
+    # Гауссов пучок
+    gauss = gauss_beam(x)
+    plot_results(x, gauss, 'гауссова пучка')
+
+    FFT_gauss = fft_process(gauss, M, N, hx)
+    plot_results(u, FFT_gauss, 'БПФ гауссова пучка')
+
+    G = fourier_integral(x, u, gauss, hx)
+    plot_results(u, G, 'ПФ гауссова пучка')
 
     # Входное поле
-    # f = input_field(x)
-    # plot_results(x, f, 'входного поля')
-    #
-    # # БПФ входного поля
-    # FFT2 = fft_process(f, M, N, hx)
-    # plot_results(u, FFT2, 'БПФ входного поля')
-    #
-    # # Входное поле - аналитическое решение
-    # FA = analytical_solution(u)
-    # plot_results_multiple(u, [FA, FFT2], ['Аналитическое решение', 'БПФ входного поля'])
+    f = input_field(x)
+    plot_results(x, f, 'входного поля')
+
+    # БПФ входного поля
+    FFT2 = fft_process(f, M, N, hx)
+    plot_results(u, FFT2, 'БПФ входного поля')
+
+    # Входное поле - аналитическое решение
+    FA = analytical_solution(u)
+    plot_results_multiple(u, [FA, FFT2], ['Аналитическое решение', 'БПФ входного поля'])
 
     # Двумерный гауссов пучок
     X, Y = np.meshgrid(x, x)
     gauss2 = np.exp(-(X ** 2 + Y ** 2))
-    plot_2d_field(gauss2, 'Амплитуда двумерного гауссова пучка')
-    plot_2d_field(np.angle(gauss2), 'Фаза двумерного гауссова пучка')
+    plot_2d_results(gauss2, 'Двумерный гауссов пучок')
 
     # БПФ двумерного гауссова пучка
     gauss2 = fft_2d_process(gauss2, M, N, hx)
-    plot_2d_field(gauss2, 'Амплитуда БПФ двумерного гауссова пучка')
-    plot_2d_field(np.angle(gauss2), 'Фаза БПФ двумерного гауссова пучка')
+    plot_2d_results(gauss2, 'БПФ двумерного гауссова пучка')
 
     # Двумерное входное поле
     f2 = np.zeros_like(X)
     f2[(np.abs(X) <= 2) & (np.abs(Y) <= 2)] = 1
-    plot_2d_field(f2, 'Амплитуда двумерного входного поля')
-    plot_2d_field(np.angle(f2), 'Фаза двумерного входного поля')
+    plot_2d_results(f2, 'Двумерное входное поле')
 
     # БПФ двумерного входного поля
     f2 = fft_2d_process(f2, M, N, hx)
-    plot_2d_field(f2, 'Амплитуда БПФ двумерного входного поля')
-    plot_2d_field(np.angle(f2), 'Фаза БПФ двумерного входного поля')
+    plot_2d_results(f2, 'БПФ двумерного входного поля')
 
     # Аналитическое двумерное решение
     FA2 = np.outer(FA, FA)
-    plot_2d_field(FA2, 'Амплитуда аналитического двумерного решения')
-    plot_2d_field(np.angle(FA2), 'Фаза аналитического двумерного решения')
+    plot_2d_results(FA2, 'Аналитическое двумерное решение')
+
 
 
 if __name__ == '__main__':
