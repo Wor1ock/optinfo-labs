@@ -1,7 +1,8 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from numpy.typing import NDArray
 from typing import List, Optional
+
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy.typing import NDArray
 
 
 def gauss_beam(x: NDArray[np.float64]) -> NDArray[np.float64]:
@@ -27,7 +28,8 @@ def fft_process(signal: NDArray[np.float64], M: int, N: int, hx: float) -> NDArr
     return FFT_signal[M // 2 - N // 2:M // 2 + N // 2]
 
 
-def fourier_integral(x: NDArray[np.float64], u: NDArray[np.float64], signal: NDArray[np.float64], hx: float) -> NDArray[np.complex128]:
+def fourier_integral(x: NDArray[np.float64], u: NDArray[np.float64], signal: NDArray[np.float64], hx: float) -> NDArray[
+    np.complex128]:
     """Преобразование Фурье через интеграл"""
     X, U = np.meshgrid(x, u)
     Kernel = np.exp(-2j * np.pi * X * U)
@@ -36,12 +38,12 @@ def fourier_integral(x: NDArray[np.float64], u: NDArray[np.float64], signal: NDA
 
 def input_field(x: NDArray[np.float64]) -> NDArray[np.float64]:
     """Входное поле rect((x + 2) / 2)"""
-    return np.where(np.abs(x) < 2, 1, 0)
+    return np.where(np.abs(x + 2) < 1, 1, 0)
 
 
 def analytical_solution(u: NDArray[np.float64]) -> NDArray[np.float64]:
     """Аналитическое решение"""
-    return 4 * np.sinc(4 * u)
+    return 4 * np.exp(2 * 1j * np.pi * u) * np.sinc(4 * u)
 
 
 def fft_2d_process(field: NDArray[np.float64], M: int, N: int, hx: float) -> NDArray[np.complex128]:
@@ -150,7 +152,6 @@ def experiment_change_N_M(signal: NDArray[np.float64], a: float) -> None:
             plt.show()
 
 
-
 def main() -> None:
     # Входные параметры
     M, N = 1024, 200
@@ -194,7 +195,7 @@ def main() -> None:
 
     # Двумерное входное поле
     f2 = np.zeros_like(X)
-    f2[(np.abs(X) <= 2) & (np.abs(Y) <= 2)] = 1
+    f2[(np.abs(X + 2) < 1) & (np.abs(Y + 2) < 1)] = 1
     plot_2d_results(f2, 'Двумерное входное поле')
 
     # БПФ двумерного входного поля
@@ -206,6 +207,7 @@ def main() -> None:
     plot_2d_results(FA2, 'Аналитическое двумерное решение')
 
     experiment_change_N_M(gauss, a)
+
 
 if __name__ == '__main__':
     main()
