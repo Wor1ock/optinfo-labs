@@ -106,6 +106,51 @@ def plot_results_multiple(x: np.ndarray, signals: List[NDArray[np.complex128]], 
     plt.show()
 
 
+def experiment_change_N_M(signal: NDArray[np.float64], a: float) -> None:
+    """
+    Исследование влияния параметров N и M на результат БПФ.
+
+    Parameters:
+    -----------
+    signal : np.ndarray
+        Входной сигнал (например, гауссов пучок).
+    a : float
+        Граница области определения сигнала.
+    """
+    # Значения N и M для исследования
+    N_values = np.array([128, 256, 512])  # Примеры значений N
+    M_values = np.array([128, 256, 512])  # Примеры значений M
+
+    for N in N_values:
+        hx = (2 * a) / N
+        x = np.linspace(-a, a - hx / 2, N)
+
+        for M in M_values:
+            hu = (2 * (N ** 2 / (4 * a * M))) / N
+            u = np.linspace(-M * hu / 2, M * hu / 2 - hu, M)
+
+            # Применяем БПФ
+            FFT_signal = fft_process(signal, M, N, hx)
+
+            # Строим графики амплитуды и фазы
+            plt.figure(figsize=(12, 6))
+
+            plt.subplot(1, 2, 1)
+            plt.title(f'Амплитуда N={N}, M={M}')
+            plt.plot(u, np.abs(FFT_signal), color='b')
+            plt.grid(True)
+
+            plt.subplot(1, 2, 2)
+            plt.title(f'Фаза N={N}, M={M}')
+            plt.plot(u, np.angle(FFT_signal), color='b')
+            plt.grid(True)
+
+            plt.suptitle(f'Исследование влияния N и M на БПФ (N={N}, M={M})', color='r')
+            plt.tight_layout(rect=(0, 0, 1, 0.96))
+            plt.show()
+
+
+
 def main() -> None:
     # Входные параметры
     M, N = 1024, 200
@@ -160,6 +205,7 @@ def main() -> None:
     FA2 = np.outer(FA, FA)
     plot_2d_results(FA2, 'Аналитическое двумерное решение')
 
+    experiment_change_N_M(gauss, a)
 
 if __name__ == '__main__':
     main()
