@@ -36,6 +36,13 @@ def fourier_integral(x: NDArray[np.float64], u: NDArray[np.float64], signal: NDA
     return Kernel @ signal * hx
 
 
+def finite_fourier_integral(f_x, x, u, hx):
+    F_u = np.zeros(len(u), dtype=complex)
+    for i in range(len(u)):
+        F_u[i] = np.sum(f_x * np.exp(-2j * np.pi * u[i] * x)) * hx
+    return F_u
+
+
 def input_field(x: NDArray[np.float64]) -> NDArray[np.float64]:
     """Входное поле rect((x + 2) / 2)"""
     return np.where(np.abs(x + 2) < 1, 1, 0)
@@ -108,52 +115,55 @@ def plot_results_multiple(x: np.ndarray, signals: List[NDArray[np.complex128]], 
     plt.show()
 
 
-def experiment_change_N_M(signal: NDArray[np.float64], a: float) -> None:
-    """
-    Исследование влияния параметров N и M на результат БПФ.
-
-    Parameters:
-    -----------
-    signal : np.ndarray
-        Входной сигнал (например, гауссов пучок).
-    a : float
-        Граница области определения сигнала.
-    """
-    # Значения N и M для исследования
-    N_values = np.array([128, 256, 512])  # Примеры значений N
-    M_values = np.array([128, 256, 512])  # Примеры значений M
+def experiment_change_N_M(signal_func, a: float) -> None:
+    N_values = np.array([128, 256, 512])
+    M_values = [512, 1024, 2048]
 
     for N in N_values:
+        b = N / (4 * a)
         hx = (2 * a) / N
+        hu = (2 * b) / N
         x = np.linspace(-a, a - hx / 2, N)
+        u = np.linspace(-b, b - hu / 2, N)
 
-        for M in M_values:
-            hu = (2 * (N ** 2 / (4 * a * M))) / N
-            u = np.linspace(-M * hu / 2, M * hu / 2 - hu, M)
+        signal = signal_func(x)
+        FFT_signal = fft_process(signal, N, N, hx)
 
-            # Применяем БПФ
-            FFT_signal = fft_process(signal, M, N, hx)
+        plot_fft_results(u, FFT_signal, N, N)
 
-            # Строим графики амплитуды и фазы
-            plt.figure(figsize=(12, 6))
+    N = 256
+    for M in M_values:
+        b = (N ** 2) / (4 * a * M)
+        hx = (2 * a) / N
+        hu = (2 * b) / N
+        x = np.linspace(-a, a - hx / 2, N)
+        u = np.linspace(-b, b - hu / 2, N)
 
-            plt.subplot(1, 2, 1)
-            plt.title(f'Амплитуда N={N}, M={M}')
-            plt.plot(u, np.abs(FFT_signal), color='b')
-            plt.grid(True)
+        signal = signal_func(x)
+        FFT_signal = fft_process(signal, M, N, hx)
 
-            plt.subplot(1, 2, 2)
-            plt.title(f'Фаза N={N}, M={M}')
-            plt.plot(u, np.angle(FFT_signal), color='b')
-            plt.grid(True)
+        plot_fft_results(u, FFT_signal, N, M)
 
-            plt.suptitle(f'Исследование влияния N и M на БПФ (N={N}, M={M})', color='r')
-            plt.tight_layout(rect=(0, 0, 1, 0.96))
-            plt.show()
+
+def plot_fft_results(u, FFT_signal, N, M):
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.title(f'Амплитуда N={N}, M={M}')
+    plt.plot(u, np.abs(FFT_signal), color='b')
+    plt.grid(True)
+
+    plt.subplot(1, 2, 2)
+    plt.title(f'Фаза N={N}, M={M}')
+    plt.plot(u, np.angle(FFT_signal), color='b')
+    plt.grid(True)
+
+    plt.suptitle(f'Исследование влияния N={N}, M={M}', color='r')
+    plt.tight_layout(rect=(0, 0, 1, 0.96))
+    plt.show()
 
 
 def main() -> None:
-    # Входные параметры
     M, N = 1024, 200
     a = 5
     b = (N ** 2) / (4 * a * M)
@@ -182,7 +192,7 @@ def main() -> None:
 
     # Входное поле - аналитическое решение
     FA = analytical_solution(u)
-    plot_results_multiple(u, [FA, FFT2], ['Аналитическое решение', 'БПФ входного поля'])
+    # plot_results_multiple(u, [FA, FFT2], ['Аналитическое решение', 'БПФ входного поля'])
 
     # Двумерный гауссов пучок
     X, Y = np.meshgrid(x, x)
@@ -206,7 +216,7 @@ def main() -> None:
     FA2 = np.outer(FA, FA)
     plot_2d_results(FA2, 'Аналитическое двумерное решение')
 
-    experiment_change_N_M(gauss, a)
+    experiment_change_N_M(gauss_beam, a)
 
 
 if __name__ == '__main__':
